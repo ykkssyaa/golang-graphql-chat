@@ -1,28 +1,60 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
 
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
-}
+scalar Time
 
 type User {
   id: ID!
   name: String!
+  chats: [Chat!]
+}
+
+type Message {
+  id: ID!
+  payload: String!
+  sender: User!
+  receiver: User!
+  chat: Chat!
+  time: Time
+}
+
+type Chat {
+  id: ID!
+  user_1: User!
+  user_2: User!
+}
+
+type MessagesFromUserPayload{
+  number: Int!
+  message: Message!
+}
+
+input MessagesFromUserInput{
+  receiver:ID
+  sender:ID
 }
 
 type Query {
-  todos: [Todo!]!
+  users: [User!]
+  chats: [Chat!]
+  messagesFromUser(input:MessagesFromUserInput):[MessagesFromUserPayload!]
 }
 
-input NewTodo {
-  text: String!
-  userId: String!
+input NewUser{
+  name: String!
+}
+
+input NewMessage{
+  payload: String!
+  sender: ID!
+  receiver: ID!
+  chat: ID!
+  time: Time
 }
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  createUser(input:NewUser): User!
+  sendMessage(input:NewMessage): Message!
+
+  deleteChat(id:ID!):Boolean
+  deleteMessage(id:ID!):Boolean
 }
+
