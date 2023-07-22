@@ -52,9 +52,14 @@ input NewMessage{
 
 type Mutation {
   createUser(input:NewUser): User!
-  sendMessage(input:NewMessage): Message!
+  postMessage(input:NewMessage): Message!
 
   deleteChat(id:ID!):Boolean
   deleteMessage(id:ID!):Boolean
+}
+
+type Subscription {
+  messagePosted(message: ID!):Message!
+  userJoined(user: ID!):User!
 }
 

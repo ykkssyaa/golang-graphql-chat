@@ -1,6 +1,9 @@
 package main
 
 import (
+	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"graphql_chat/graph"
 	"log"
 	"net/http"
@@ -18,7 +21,22 @@ func main() {
 		port = defaultPort
 	}
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	dsn := "host=localhost user=postgres password=yksadm dbname=postgres port=5432 sslmode=disable"
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN: dsn,
+	}), &gorm.Config{})
+
+	db.AutoMigrate()
+
+	if err != nil {
+		log.Fatalf("error with postrges: %v \n", err)
+	}
+
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
+		DB: db,
+	}}))
+
+	srv.AddTransport(&transport.Websocket{})
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", srv)

@@ -2,19 +2,49 @@
 
 package model
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+import (
+	"time"
+)
+
+type Chat struct {
+	ID    string `json:"id"`
+	User1 *User  `json:"user_1"`
+	User2 *User  `json:"user_2"`
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+type Message struct {
+	ID       string     `json:"id"`
+	Payload  string     `json:"payload"`
+	Sender   *User      `json:"sender"`
+	Receiver *User      `json:"receiver"`
+	Chat     *Chat      `json:"chat"`
+	Time     *time.Time `json:"time,omitempty"`
+}
+
+type MessagesFromUserInput struct {
+	Receiver *string `json:"receiver,omitempty"`
+	Sender   *string `json:"sender,omitempty"`
+}
+
+type MessagesFromUserPayload struct {
+	Number  int      `json:"number"`
+	Message *Message `json:"message"`
+}
+
+type NewMessage struct {
+	Payload  string     `json:"payload"`
+	Sender   string     `json:"sender"`
+	Receiver string     `json:"receiver"`
+	Chat     string     `json:"chat"`
+	Time     *time.Time `json:"time,omitempty"`
+}
+
+type NewUser struct {
+	Name string `json:"name"`
 }
 
 type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID    string  `json:"id"`
+	Name  string  `json:"name"`
+	Chats []*Chat `json:"chats,omitempty"`
 }
