@@ -21,14 +21,14 @@ type Message struct {
 	Time     *time.Time `json:"time,omitempty"`
 }
 
-type MessagesFromUserInput struct {
-	Receiver *string `json:"receiver,omitempty"`
-	Sender   *string `json:"sender,omitempty"`
+type MessageEdge struct {
+	Node   *Message `json:"node,omitempty"`
+	Cursor string   `json:"cursor"`
 }
 
-type MessagesFromUserPayload struct {
-	Number  int      `json:"number"`
-	Message *Message `json:"message"`
+type MessagesFromUserInput struct {
+	Receiver string `json:"receiver"`
+	Sender   string `json:"sender"`
 }
 
 type NewMessage struct {
@@ -41,6 +41,12 @@ type NewMessage struct {
 
 type NewUser struct {
 	Name string `json:"name"`
+}
+
+type PageInfo struct {
+	StartCursor string `json:"startCursor"`
+	EndCursor   string `json:"endCursor"`
+	HasNextPage bool   `json:"hasNextPage"`
 }
 
 type User struct {

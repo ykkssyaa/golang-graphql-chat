@@ -10,6 +10,11 @@ import (
 	"graphql_chat/graph/model"
 )
 
+// Edges is the resolver for the edges field.
+func (r *messageConnectionResolver) Edges(ctx context.Context, obj *model.MessageConnection) ([]*model.MessageEdge, error) {
+	panic(fmt.Errorf("not implemented: Edges - edges"))
+}
+
 // CreateUser is the resolver for the createUser field.
 func (r *mutationResolver) CreateUser(ctx context.Context, input *model.NewUser) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: CreateUser - createUser"))
@@ -41,7 +46,7 @@ func (r *queryResolver) Chats(ctx context.Context) ([]*model.Chat, error) {
 }
 
 // MessagesFromUser is the resolver for the messagesFromUser field.
-func (r *queryResolver) MessagesFromUser(ctx context.Context, input *model.MessagesFromUserInput) ([]*model.MessagesFromUserPayload, error) {
+func (r *queryResolver) MessagesFromUser(ctx context.Context, input model.MessagesFromUserInput, first *int, after *string) (*model.MessageConnection, error) {
 	panic(fmt.Errorf("not implemented: MessagesFromUser - messagesFromUser"))
 }
 
@@ -55,6 +60,11 @@ func (r *subscriptionResolver) UserJoined(ctx context.Context, user string) (<-c
 	panic(fmt.Errorf("not implemented: UserJoined - userJoined"))
 }
 
+// MessageConnection returns MessageConnectionResolver implementation.
+func (r *Resolver) MessageConnection() MessageConnectionResolver {
+	return &messageConnectionResolver{r}
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
@@ -64,6 +74,7 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 // Subscription returns SubscriptionResolver implementation.
 func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
 
+type messageConnectionResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }

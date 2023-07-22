@@ -2,9 +2,8 @@ package main
 
 import (
 	"github.com/99designs/gqlgen/graphql/handler/transport"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 	"graphql_chat/graph"
+	"graphql_chat/package/common"
 	"log"
 	"net/http"
 	"os"
@@ -21,13 +20,7 @@ func main() {
 		port = defaultPort
 	}
 
-	dsn := "host=localhost user=postgres password=yksadm dbname=postgres port=5432 sslmode=disable"
-	db, err := gorm.Open(postgres.New(postgres.Config{
-		DSN: dsn,
-	}), &gorm.Config{})
-
-	db.AutoMigrate()
-
+	db, err := common.InitPostgres()
 	if err != nil {
 		log.Fatalf("error with postrges: %v \n", err)
 	}

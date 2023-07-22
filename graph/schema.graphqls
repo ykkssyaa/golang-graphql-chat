@@ -22,20 +22,32 @@ type Chat {
   user_2: User!
 }
 
-type MessagesFromUserPayload{
-  number: Int!
-  message: Message!
+input MessagesFromUserInput{
+  receiver:ID!
+  sender:ID!
 }
 
-input MessagesFromUserInput{
-  receiver:ID
-  sender:ID
+type MessageEdge {
+  node: Message
+  cursor: ID!
+}
+
+type MessageConnection {
+  edges: [MessageEdge]
+  pageInfo: PageInfo!
+  totalCount: Int
+}
+
+type PageInfo {
+  startCursor: ID!
+  endCursor: ID!
+  hasNextPage: Boolean!
 }
 
 type Query {
   users: [User!]
   chats: [Chat!]
-  messagesFromUser(input:MessagesFromUserInput):[MessagesFromUserPayload!]
+  messagesFromUser(input:MessagesFromUserInput!, first: Int, after:ID):MessageConnection!
 }
 
 input NewUser{
