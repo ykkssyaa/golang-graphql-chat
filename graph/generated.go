@@ -8,7 +8,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
-	"graphql_chat/graph/model"
+	model2 "graphql_chat/package/model"
 	"io"
 	"strconv"
 	"sync"
@@ -76,10 +76,10 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateUser    func(childComplexity int, input *model.NewUser) int
+		CreateUser    func(childComplexity int, input *model2.NewUser) int
 		DeleteChat    func(childComplexity int, id string) int
 		DeleteMessage func(childComplexity int, id string) int
-		PostMessage   func(childComplexity int, input *model.NewMessage) int
+		PostMessage   func(childComplexity int, input *model2.NewMessage) int
 	}
 
 	PageInfo struct {
@@ -90,7 +90,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Chats            func(childComplexity int) int
-		MessagesFromUser func(childComplexity int, input model.MessagesFromUserInput, first *int, after *string) int
+		MessagesFromUser func(childComplexity int, input model2.MessagesFromUserInput, first *int, after *string) int
 		Users            func(childComplexity int) int
 	}
 
@@ -107,22 +107,22 @@ type ComplexityRoot struct {
 }
 
 type MessageConnectionResolver interface {
-	Edges(ctx context.Context, obj *model.MessageConnection) ([]*model.MessageEdge, error)
+	Edges(ctx context.Context, obj *model2.MessageConnection) ([]*model2.MessageEdge, error)
 }
 type MutationResolver interface {
-	CreateUser(ctx context.Context, input *model.NewUser) (*model.User, error)
-	PostMessage(ctx context.Context, input *model.NewMessage) (*model.Message, error)
+	CreateUser(ctx context.Context, input *model2.NewUser) (*model2.User, error)
+	PostMessage(ctx context.Context, input *model2.NewMessage) (*model2.Message, error)
 	DeleteChat(ctx context.Context, id string) (*bool, error)
 	DeleteMessage(ctx context.Context, id string) (*bool, error)
 }
 type QueryResolver interface {
-	Users(ctx context.Context) ([]*model.User, error)
-	Chats(ctx context.Context) ([]*model.Chat, error)
-	MessagesFromUser(ctx context.Context, input model.MessagesFromUserInput, first *int, after *string) (*model.MessageConnection, error)
+	Users(ctx context.Context) ([]*model2.User, error)
+	Chats(ctx context.Context) ([]*model2.Chat, error)
+	MessagesFromUser(ctx context.Context, input model2.MessagesFromUserInput, first *int, after *string) (*model2.MessageConnection, error)
 }
 type SubscriptionResolver interface {
-	MessagePosted(ctx context.Context, message string) (<-chan *model.Message, error)
-	UserJoined(ctx context.Context, user string) (<-chan *model.User, error)
+	MessagePosted(ctx context.Context, message string) (<-chan *model2.Message, error)
+	UserJoined(ctx context.Context, user string) (<-chan *model2.User, error)
 }
 
 type executableSchema struct {
@@ -248,7 +248,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(*model.NewUser)), true
+		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(*model2.NewUser)), true
 
 	case "Mutation.deleteChat":
 		if e.complexity.Mutation.DeleteChat == nil {
@@ -284,7 +284,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.PostMessage(childComplexity, args["input"].(*model.NewMessage)), true
+		return e.complexity.Mutation.PostMessage(childComplexity, args["input"].(*model2.NewMessage)), true
 
 	case "PageInfo.endCursor":
 		if e.complexity.PageInfo.EndCursor == nil {
@@ -324,7 +324,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.MessagesFromUser(childComplexity, args["input"].(model.MessagesFromUserInput), args["first"].(*int), args["after"].(*string)), true
+		return e.complexity.Query.MessagesFromUser(childComplexity, args["input"].(model2.MessagesFromUserInput), args["first"].(*int), args["after"].(*string)), true
 
 	case "Query.users":
 		if e.complexity.Query.Users == nil {
@@ -525,7 +525,7 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.NewUser
+	var arg0 *model2.NewUser
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalONewUser2ᚖgraphql_chatᚋgraphᚋmodelᚐNewUser(ctx, tmp)
@@ -570,7 +570,7 @@ func (ec *executionContext) field_Mutation_deleteMessage_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_postMessage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.NewMessage
+	var arg0 *model2.NewMessage
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalONewMessage2ᚖgraphql_chatᚋgraphᚋmodelᚐNewMessage(ctx, tmp)
@@ -600,7 +600,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_messagesFromUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.MessagesFromUserInput
+	var arg0 model2.MessagesFromUserInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNMessagesFromUserInput2graphql_chatᚋgraphᚋmodelᚐMessagesFromUserInput(ctx, tmp)
@@ -698,7 +698,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Chat_id(ctx context.Context, field graphql.CollectedField, obj *model.Chat) (ret graphql.Marshaler) {
+func (ec *executionContext) _Chat_id(ctx context.Context, field graphql.CollectedField, obj *model2.Chat) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Chat_id(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -742,7 +742,7 @@ func (ec *executionContext) fieldContext_Chat_id(ctx context.Context, field grap
 	return fc, nil
 }
 
-func (ec *executionContext) _Chat_user_1(ctx context.Context, field graphql.CollectedField, obj *model.Chat) (ret graphql.Marshaler) {
+func (ec *executionContext) _Chat_user_1(ctx context.Context, field graphql.CollectedField, obj *model2.Chat) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Chat_user_1(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -768,7 +768,7 @@ func (ec *executionContext) _Chat_user_1(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model2.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖgraphql_chatᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
@@ -794,7 +794,7 @@ func (ec *executionContext) fieldContext_Chat_user_1(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Chat_user_2(ctx context.Context, field graphql.CollectedField, obj *model.Chat) (ret graphql.Marshaler) {
+func (ec *executionContext) _Chat_user_2(ctx context.Context, field graphql.CollectedField, obj *model2.Chat) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Chat_user_2(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -820,7 +820,7 @@ func (ec *executionContext) _Chat_user_2(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model2.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖgraphql_chatᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
@@ -846,7 +846,7 @@ func (ec *executionContext) fieldContext_Chat_user_2(ctx context.Context, field 
 	return fc, nil
 }
 
-func (ec *executionContext) _Message_id(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
+func (ec *executionContext) _Message_id(ctx context.Context, field graphql.CollectedField, obj *model2.Message) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Message_id(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -890,7 +890,7 @@ func (ec *executionContext) fieldContext_Message_id(ctx context.Context, field g
 	return fc, nil
 }
 
-func (ec *executionContext) _Message_payload(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
+func (ec *executionContext) _Message_payload(ctx context.Context, field graphql.CollectedField, obj *model2.Message) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Message_payload(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -934,7 +934,7 @@ func (ec *executionContext) fieldContext_Message_payload(ctx context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Message_sender(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
+func (ec *executionContext) _Message_sender(ctx context.Context, field graphql.CollectedField, obj *model2.Message) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Message_sender(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -960,7 +960,7 @@ func (ec *executionContext) _Message_sender(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model2.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖgraphql_chatᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
@@ -986,7 +986,7 @@ func (ec *executionContext) fieldContext_Message_sender(ctx context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Message_receiver(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
+func (ec *executionContext) _Message_receiver(ctx context.Context, field graphql.CollectedField, obj *model2.Message) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Message_receiver(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1012,7 +1012,7 @@ func (ec *executionContext) _Message_receiver(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model2.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖgraphql_chatᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
@@ -1038,7 +1038,7 @@ func (ec *executionContext) fieldContext_Message_receiver(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Message_chat(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
+func (ec *executionContext) _Message_chat(ctx context.Context, field graphql.CollectedField, obj *model2.Message) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Message_chat(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1064,7 +1064,7 @@ func (ec *executionContext) _Message_chat(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Chat)
+	res := resTmp.(*model2.Chat)
 	fc.Result = res
 	return ec.marshalNChat2ᚖgraphql_chatᚋgraphᚋmodelᚐChat(ctx, field.Selections, res)
 }
@@ -1090,7 +1090,7 @@ func (ec *executionContext) fieldContext_Message_chat(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Message_time(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
+func (ec *executionContext) _Message_time(ctx context.Context, field graphql.CollectedField, obj *model2.Message) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Message_time(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1131,7 +1131,7 @@ func (ec *executionContext) fieldContext_Message_time(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.MessageConnection) (ret graphql.Marshaler) {
+func (ec *executionContext) _MessageConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model2.MessageConnection) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MessageConnection_edges(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1154,7 +1154,7 @@ func (ec *executionContext) _MessageConnection_edges(ctx context.Context, field 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.MessageEdge)
+	res := resTmp.([]*model2.MessageEdge)
 	fc.Result = res
 	return ec.marshalOMessageEdge2ᚕᚖgraphql_chatᚋgraphᚋmodelᚐMessageEdge(ctx, field.Selections, res)
 }
@@ -1178,7 +1178,7 @@ func (ec *executionContext) fieldContext_MessageConnection_edges(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.MessageConnection) (ret graphql.Marshaler) {
+func (ec *executionContext) _MessageConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model2.MessageConnection) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MessageConnection_pageInfo(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1204,7 +1204,7 @@ func (ec *executionContext) _MessageConnection_pageInfo(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(model.PageInfo)
+	res := resTmp.(model2.PageInfo)
 	fc.Result = res
 	return ec.marshalNPageInfo2graphql_chatᚋgraphᚋmodelᚐPageInfo(ctx, field.Selections, res)
 }
@@ -1230,7 +1230,7 @@ func (ec *executionContext) fieldContext_MessageConnection_pageInfo(ctx context.
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.MessageConnection) (ret graphql.Marshaler) {
+func (ec *executionContext) _MessageConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *model2.MessageConnection) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MessageConnection_totalCount(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1271,7 +1271,7 @@ func (ec *executionContext) fieldContext_MessageConnection_totalCount(ctx contex
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.MessageEdge) (ret graphql.Marshaler) {
+func (ec *executionContext) _MessageEdge_node(ctx context.Context, field graphql.CollectedField, obj *model2.MessageEdge) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MessageEdge_node(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1294,7 +1294,7 @@ func (ec *executionContext) _MessageEdge_node(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Message)
+	res := resTmp.(*model2.Message)
 	fc.Result = res
 	return ec.marshalOMessage2ᚖgraphql_chatᚋgraphᚋmodelᚐMessage(ctx, field.Selections, res)
 }
@@ -1326,7 +1326,7 @@ func (ec *executionContext) fieldContext_MessageEdge_node(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _MessageEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.MessageEdge) (ret graphql.Marshaler) {
+func (ec *executionContext) _MessageEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model2.MessageEdge) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_MessageEdge_cursor(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1384,7 +1384,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(*model.NewUser))
+		return ec.resolvers.Mutation().CreateUser(rctx, fc.Args["input"].(*model2.NewUser))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1396,7 +1396,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.User)
+	res := resTmp.(*model2.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖgraphql_chatᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
 }
@@ -1447,7 +1447,7 @@ func (ec *executionContext) _Mutation_postMessage(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().PostMessage(rctx, fc.Args["input"].(*model.NewMessage))
+		return ec.resolvers.Mutation().PostMessage(rctx, fc.Args["input"].(*model2.NewMessage))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1459,7 +1459,7 @@ func (ec *executionContext) _Mutation_postMessage(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Message)
+	res := resTmp.(*model2.Message)
 	fc.Result = res
 	return ec.marshalNMessage2ᚖgraphql_chatᚋgraphᚋmodelᚐMessage(ctx, field.Selections, res)
 }
@@ -1606,7 +1606,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteMessage(ctx context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
+func (ec *executionContext) _PageInfo_startCursor(ctx context.Context, field graphql.CollectedField, obj *model2.PageInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PageInfo_startCursor(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1650,7 +1650,7 @@ func (ec *executionContext) fieldContext_PageInfo_startCursor(ctx context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
+func (ec *executionContext) _PageInfo_endCursor(ctx context.Context, field graphql.CollectedField, obj *model2.PageInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PageInfo_endCursor(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1694,7 +1694,7 @@ func (ec *executionContext) fieldContext_PageInfo_endCursor(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model.PageInfo) (ret graphql.Marshaler) {
+func (ec *executionContext) _PageInfo_hasNextPage(ctx context.Context, field graphql.CollectedField, obj *model2.PageInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PageInfo_hasNextPage(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -1761,7 +1761,7 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.User)
+	res := resTmp.([]*model2.User)
 	fc.Result = res
 	return ec.marshalOUser2ᚕᚖgraphql_chatᚋgraphᚋmodelᚐUserᚄ(ctx, field.Selections, res)
 }
@@ -1810,7 +1810,7 @@ func (ec *executionContext) _Query_chats(ctx context.Context, field graphql.Coll
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Chat)
+	res := resTmp.([]*model2.Chat)
 	fc.Result = res
 	return ec.marshalOChat2ᚕᚖgraphql_chatᚋgraphᚋmodelᚐChatᚄ(ctx, field.Selections, res)
 }
@@ -1850,7 +1850,7 @@ func (ec *executionContext) _Query_messagesFromUser(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MessagesFromUser(rctx, fc.Args["input"].(model.MessagesFromUserInput), fc.Args["first"].(*int), fc.Args["after"].(*string))
+		return ec.resolvers.Query().MessagesFromUser(rctx, fc.Args["input"].(model2.MessagesFromUserInput), fc.Args["first"].(*int), fc.Args["after"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1862,7 +1862,7 @@ func (ec *executionContext) _Query_messagesFromUser(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.MessageConnection)
+	res := resTmp.(*model2.MessageConnection)
 	fc.Result = res
 	return ec.marshalNMessageConnection2ᚖgraphql_chatᚋgraphᚋmodelᚐMessageConnection(ctx, field.Selections, res)
 }
@@ -2056,7 +2056,7 @@ func (ec *executionContext) _Subscription_messagePosted(ctx context.Context, fie
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan *model.Message):
+		case res, ok := <-resTmp.(<-chan *model2.Message):
 			if !ok {
 				return nil
 			}
@@ -2139,7 +2139,7 @@ func (ec *executionContext) _Subscription_userJoined(ctx context.Context, field 
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan *model.User):
+		case res, ok := <-resTmp.(<-chan *model2.User):
 			if !ok {
 				return nil
 			}
@@ -2188,7 +2188,7 @@ func (ec *executionContext) fieldContext_Subscription_userJoined(ctx context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *model2.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_id(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2232,7 +2232,7 @@ func (ec *executionContext) fieldContext_User_id(ctx context.Context, field grap
 	return fc, nil
 }
 
-func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *model2.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_name(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2276,7 +2276,7 @@ func (ec *executionContext) fieldContext_User_name(ctx context.Context, field gr
 	return fc, nil
 }
 
-func (ec *executionContext) _User_chats(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+func (ec *executionContext) _User_chats(ctx context.Context, field graphql.CollectedField, obj *model2.User) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_User_chats(ctx, field)
 	if err != nil {
 		return graphql.Null
@@ -2299,7 +2299,7 @@ func (ec *executionContext) _User_chats(ctx context.Context, field graphql.Colle
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Chat)
+	res := resTmp.([]*model2.Chat)
 	fc.Result = res
 	return ec.marshalOChat2ᚕᚖgraphql_chatᚋgraphᚋmodelᚐChatᚄ(ctx, field.Selections, res)
 }
@@ -4098,8 +4098,8 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputMessagesFromUserInput(ctx context.Context, obj interface{}) (model.MessagesFromUserInput, error) {
-	var it model.MessagesFromUserInput
+func (ec *executionContext) unmarshalInputMessagesFromUserInput(ctx context.Context, obj interface{}) (model2.MessagesFromUserInput, error) {
+	var it model2.MessagesFromUserInput
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -4136,8 +4136,8 @@ func (ec *executionContext) unmarshalInputMessagesFromUserInput(ctx context.Cont
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewMessage(ctx context.Context, obj interface{}) (model.NewMessage, error) {
-	var it model.NewMessage
+func (ec *executionContext) unmarshalInputNewMessage(ctx context.Context, obj interface{}) (model2.NewMessage, error) {
+	var it model2.NewMessage
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -4201,8 +4201,8 @@ func (ec *executionContext) unmarshalInputNewMessage(ctx context.Context, obj in
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj interface{}) (model.NewUser, error) {
-	var it model.NewUser
+func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj interface{}) (model2.NewUser, error) {
+	var it model2.NewUser
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -4240,7 +4240,7 @@ func (ec *executionContext) unmarshalInputNewUser(ctx context.Context, obj inter
 
 var chatImplementors = []string{"Chat"}
 
-func (ec *executionContext) _Chat(ctx context.Context, sel ast.SelectionSet, obj *model.Chat) graphql.Marshaler {
+func (ec *executionContext) _Chat(ctx context.Context, sel ast.SelectionSet, obj *model2.Chat) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, chatImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -4289,7 +4289,7 @@ func (ec *executionContext) _Chat(ctx context.Context, sel ast.SelectionSet, obj
 
 var messageImplementors = []string{"Message"}
 
-func (ec *executionContext) _Message(ctx context.Context, sel ast.SelectionSet, obj *model.Message) graphql.Marshaler {
+func (ec *executionContext) _Message(ctx context.Context, sel ast.SelectionSet, obj *model2.Message) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, messageImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -4350,7 +4350,7 @@ func (ec *executionContext) _Message(ctx context.Context, sel ast.SelectionSet, 
 
 var messageConnectionImplementors = []string{"MessageConnection"}
 
-func (ec *executionContext) _MessageConnection(ctx context.Context, sel ast.SelectionSet, obj *model.MessageConnection) graphql.Marshaler {
+func (ec *executionContext) _MessageConnection(ctx context.Context, sel ast.SelectionSet, obj *model2.MessageConnection) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, messageConnectionImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -4424,7 +4424,7 @@ func (ec *executionContext) _MessageConnection(ctx context.Context, sel ast.Sele
 
 var messageEdgeImplementors = []string{"MessageEdge"}
 
-func (ec *executionContext) _MessageEdge(ctx context.Context, sel ast.SelectionSet, obj *model.MessageEdge) graphql.Marshaler {
+func (ec *executionContext) _MessageEdge(ctx context.Context, sel ast.SelectionSet, obj *model2.MessageEdge) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, messageEdgeImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -4529,7 +4529,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 var pageInfoImplementors = []string{"PageInfo"}
 
-func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet, obj *model.PageInfo) graphql.Marshaler {
+func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet, obj *model2.PageInfo) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, pageInfoImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -4710,7 +4710,7 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 
 var userImplementors = []string{"User"}
 
-func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *model.User) graphql.Marshaler {
+func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *model2.User) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, userImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -5095,7 +5095,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNChat2ᚖgraphql_chatᚋgraphᚋmodelᚐChat(ctx context.Context, sel ast.SelectionSet, v *model.Chat) graphql.Marshaler {
+func (ec *executionContext) marshalNChat2ᚖgraphql_chatᚋgraphᚋmodelᚐChat(ctx context.Context, sel ast.SelectionSet, v *model2.Chat) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5120,11 +5120,11 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNMessage2graphql_chatᚋgraphᚋmodelᚐMessage(ctx context.Context, sel ast.SelectionSet, v model.Message) graphql.Marshaler {
+func (ec *executionContext) marshalNMessage2graphql_chatᚋgraphᚋmodelᚐMessage(ctx context.Context, sel ast.SelectionSet, v model2.Message) graphql.Marshaler {
 	return ec._Message(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMessage2ᚖgraphql_chatᚋgraphᚋmodelᚐMessage(ctx context.Context, sel ast.SelectionSet, v *model.Message) graphql.Marshaler {
+func (ec *executionContext) marshalNMessage2ᚖgraphql_chatᚋgraphᚋmodelᚐMessage(ctx context.Context, sel ast.SelectionSet, v *model2.Message) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5134,11 +5134,11 @@ func (ec *executionContext) marshalNMessage2ᚖgraphql_chatᚋgraphᚋmodelᚐMe
 	return ec._Message(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMessageConnection2graphql_chatᚋgraphᚋmodelᚐMessageConnection(ctx context.Context, sel ast.SelectionSet, v model.MessageConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNMessageConnection2graphql_chatᚋgraphᚋmodelᚐMessageConnection(ctx context.Context, sel ast.SelectionSet, v model2.MessageConnection) graphql.Marshaler {
 	return ec._MessageConnection(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMessageConnection2ᚖgraphql_chatᚋgraphᚋmodelᚐMessageConnection(ctx context.Context, sel ast.SelectionSet, v *model.MessageConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNMessageConnection2ᚖgraphql_chatᚋgraphᚋmodelᚐMessageConnection(ctx context.Context, sel ast.SelectionSet, v *model2.MessageConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5148,12 +5148,12 @@ func (ec *executionContext) marshalNMessageConnection2ᚖgraphql_chatᚋgraphᚋ
 	return ec._MessageConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNMessagesFromUserInput2graphql_chatᚋgraphᚋmodelᚐMessagesFromUserInput(ctx context.Context, v interface{}) (model.MessagesFromUserInput, error) {
+func (ec *executionContext) unmarshalNMessagesFromUserInput2graphql_chatᚋgraphᚋmodelᚐMessagesFromUserInput(ctx context.Context, v interface{}) (model2.MessagesFromUserInput, error) {
 	res, err := ec.unmarshalInputMessagesFromUserInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNPageInfo2graphql_chatᚋgraphᚋmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v model.PageInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNPageInfo2graphql_chatᚋgraphᚋmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v model2.PageInfo) graphql.Marshaler {
 	return ec._PageInfo(ctx, sel, &v)
 }
 
@@ -5172,11 +5172,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNUser2graphql_chatᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2graphql_chatᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v model2.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNUser2ᚖgraphql_chatᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2ᚖgraphql_chatᚋgraphᚋmodelᚐUser(ctx context.Context, sel ast.SelectionSet, v *model2.User) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5465,7 +5465,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOChat2ᚕᚖgraphql_chatᚋgraphᚋmodelᚐChatᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Chat) graphql.Marshaler {
+func (ec *executionContext) marshalOChat2ᚕᚖgraphql_chatᚋgraphᚋmodelᚐChatᚄ(ctx context.Context, sel ast.SelectionSet, v []*model2.Chat) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -5554,14 +5554,14 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return res
 }
 
-func (ec *executionContext) marshalOMessage2ᚖgraphql_chatᚋgraphᚋmodelᚐMessage(ctx context.Context, sel ast.SelectionSet, v *model.Message) graphql.Marshaler {
+func (ec *executionContext) marshalOMessage2ᚖgraphql_chatᚋgraphᚋmodelᚐMessage(ctx context.Context, sel ast.SelectionSet, v *model2.Message) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Message(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOMessageEdge2ᚕᚖgraphql_chatᚋgraphᚋmodelᚐMessageEdge(ctx context.Context, sel ast.SelectionSet, v []*model.MessageEdge) graphql.Marshaler {
+func (ec *executionContext) marshalOMessageEdge2ᚕᚖgraphql_chatᚋgraphᚋmodelᚐMessageEdge(ctx context.Context, sel ast.SelectionSet, v []*model2.MessageEdge) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -5602,14 +5602,14 @@ func (ec *executionContext) marshalOMessageEdge2ᚕᚖgraphql_chatᚋgraphᚋmod
 	return ret
 }
 
-func (ec *executionContext) marshalOMessageEdge2ᚖgraphql_chatᚋgraphᚋmodelᚐMessageEdge(ctx context.Context, sel ast.SelectionSet, v *model.MessageEdge) graphql.Marshaler {
+func (ec *executionContext) marshalOMessageEdge2ᚖgraphql_chatᚋgraphᚋmodelᚐMessageEdge(ctx context.Context, sel ast.SelectionSet, v *model2.MessageEdge) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._MessageEdge(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalONewMessage2ᚖgraphql_chatᚋgraphᚋmodelᚐNewMessage(ctx context.Context, v interface{}) (*model.NewMessage, error) {
+func (ec *executionContext) unmarshalONewMessage2ᚖgraphql_chatᚋgraphᚋmodelᚐNewMessage(ctx context.Context, v interface{}) (*model2.NewMessage, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5617,7 +5617,7 @@ func (ec *executionContext) unmarshalONewMessage2ᚖgraphql_chatᚋgraphᚋmodel
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalONewUser2ᚖgraphql_chatᚋgraphᚋmodelᚐNewUser(ctx context.Context, v interface{}) (*model.NewUser, error) {
+func (ec *executionContext) unmarshalONewUser2ᚖgraphql_chatᚋgraphᚋmodelᚐNewUser(ctx context.Context, v interface{}) (*model2.NewUser, error) {
 	if v == nil {
 		return nil, nil
 	}
@@ -5657,7 +5657,7 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return res
 }
 
-func (ec *executionContext) marshalOUser2ᚕᚖgraphql_chatᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.User) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚕᚖgraphql_chatᚋgraphᚋmodelᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*model2.User) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
