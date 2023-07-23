@@ -7,7 +7,8 @@ import (
 
 type UserDB struct {
 	gorm.Model
-	Name string `gorm:"not null;size:256"`
+	Name  string `gorm:"not null;size:256"`
+	chats []Chat `gorm:"many2many:users_chats;"`
 }
 
 func (u *UserDB) ToGraphQL() *User {
@@ -27,4 +28,12 @@ type ChatDB struct {
 	gorm.Model
 	User1 UserDB `gorm:"many2many:users_chats;"`
 	User2 UserDB `gorm:"many2many:users_chats;"`
+}
+
+func (c ChatDB) ToGraphQL() *Chat {
+	return &Chat{
+		ID:    strconv.FormatUint(uint64(c.ID), 10),
+		User1: c.User1.ToGraphQL(),
+		User2: c.User2.ToGraphQL(),
+	}
 }
