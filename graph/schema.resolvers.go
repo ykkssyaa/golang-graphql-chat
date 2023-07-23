@@ -7,21 +7,31 @@ package graph
 import (
 	"context"
 	"fmt"
-	model2 "graphql_chat/package/model"
+	"graphql_chat/package/common"
+	model "graphql_chat/package/model"
 )
 
 // Edges is the resolver for the edges field.
-func (r *messageConnectionResolver) Edges(ctx context.Context, obj *model2.MessageConnection) ([]*model2.MessageEdge, error) {
+func (r *messageConnectionResolver) Edges(ctx context.Context, obj *model.MessageConnection) ([]*model.MessageEdge, error) {
 	panic(fmt.Errorf("not implemented: Edges - edges"))
 }
 
 // CreateUser is the resolver for the createUser field.
-func (r *mutationResolver) CreateUser(ctx context.Context, input *model2.NewUser) (*model2.User, error) {
-	panic(fmt.Errorf("not implemented: CreateUser - createUser"))
+func (r *mutationResolver) CreateUser(ctx context.Context, input *model.NewUser) (*model.User, error) {
+
+	customContext := common.GetContext(ctx)
+
+	newUser := &model.UserDB{
+		Name: input.Name,
+	}
+
+	err := customContext.Database.Create(newUser).Error
+
+	return newUser.ToGraphQL(), err
 }
 
 // PostMessage is the resolver for the postMessage field.
-func (r *mutationResolver) PostMessage(ctx context.Context, input *model2.NewMessage) (*model2.Message, error) {
+func (r *mutationResolver) PostMessage(ctx context.Context, input *model.NewMessage) (*model.Message, error) {
 	panic(fmt.Errorf("not implemented: PostMessage - postMessage"))
 }
 
@@ -36,27 +46,27 @@ func (r *mutationResolver) DeleteMessage(ctx context.Context, id string) (*bool,
 }
 
 // Users is the resolver for the users field.
-func (r *queryResolver) Users(ctx context.Context) ([]*model2.User, error) {
+func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 	panic(fmt.Errorf("not implemented: Users - users"))
 }
 
 // Chats is the resolver for the chats field.
-func (r *queryResolver) Chats(ctx context.Context) ([]*model2.Chat, error) {
+func (r *queryResolver) Chats(ctx context.Context) ([]*model.Chat, error) {
 	panic(fmt.Errorf("not implemented: Chats - chats"))
 }
 
 // MessagesFromUser is the resolver for the messagesFromUser field.
-func (r *queryResolver) MessagesFromUser(ctx context.Context, input model2.MessagesFromUserInput, first *int, after *string) (*model2.MessageConnection, error) {
+func (r *queryResolver) MessagesFromUser(ctx context.Context, input model.MessagesFromUserInput, first *int, after *string) (*model.MessageConnection, error) {
 	panic(fmt.Errorf("not implemented: MessagesFromUser - messagesFromUser"))
 }
 
 // MessagePosted is the resolver for the messagePosted field.
-func (r *subscriptionResolver) MessagePosted(ctx context.Context, message string) (<-chan *model2.Message, error) {
+func (r *subscriptionResolver) MessagePosted(ctx context.Context, message string) (<-chan *model.Message, error) {
 	panic(fmt.Errorf("not implemented: MessagePosted - messagePosted"))
 }
 
 // UserJoined is the resolver for the userJoined field.
-func (r *subscriptionResolver) UserJoined(ctx context.Context, user string) (<-chan *model2.User, error) {
+func (r *subscriptionResolver) UserJoined(ctx context.Context, user string) (<-chan *model.User, error) {
 	panic(fmt.Errorf("not implemented: UserJoined - userJoined"))
 }
 

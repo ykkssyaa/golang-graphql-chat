@@ -1,22 +1,30 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+	"strconv"
+)
 
 type UserDB struct {
 	gorm.Model
-	name string `gorm:"not null;size:256"`
+	Name string `gorm:"not null;size:256"`
+}
+
+func (u *UserDB) ToGraphQL() *User {
+	id := strconv.FormatUint(uint64(u.ID), 10)
+	return &User{Name: u.Name, ID: id}
 }
 
 type MessageDB struct {
 	gorm.Model
-	payload    string `gorm:"not null;type:text"`
-	chat       ChatDB // Many-to-one association
-	senderID   uint
-	receiverID uint
+	Payload    string `gorm:"not null;type:text"`
+	Chat       ChatDB `gorm:"foreignKey:ID"` // Many-to-one association
+	SenderID   uint
+	ReceiverID uint
 }
 
 type ChatDB struct {
 	gorm.Model
-	user1 UserDB `gorm:"many2many:users_chats;"`
-	user2 UserDB `gorm:"many2many:users_chats;"`
+	User1 UserDB `gorm:"many2many:users_chats;"`
+	User2 UserDB `gorm:"many2many:users_chats;"`
 }
