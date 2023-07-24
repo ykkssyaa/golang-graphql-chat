@@ -17,7 +17,7 @@ type Message struct {
 	Payload  string     `json:"payload"`
 	Sender   *User      `json:"sender"`
 	Receiver *User      `json:"receiver"`
-	Chat     *Chat      `json:"chat"`
+	ChatID   string     `json:"chatID"`
 	Time     *time.Time `json:"time,omitempty"`
 }
 
@@ -55,7 +55,6 @@ type PageInfo struct {
 }
 
 type User struct {
-	ID    string  `json:"id"`
-	Name  string  `json:"name"`
-	Chats []*Chat `json:"chats,omitempty"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }

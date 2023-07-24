@@ -56,7 +56,7 @@ type ComplexityRoot struct {
 	}
 
 	Message struct {
-		Chat     func(childComplexity int) int
+		ChatID   func(childComplexity int) int
 		ID       func(childComplexity int) int
 		Payload  func(childComplexity int) int
 		Receiver func(childComplexity int) int
@@ -90,7 +90,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Chats            func(childComplexity int) int
+		Chats            func(childComplexity int, user *string) int
 		MessagesFromUser func(childComplexity int, input model.MessagesFromUserInput, first *int, after *string) int
 		Users            func(childComplexity int) int
 	}
@@ -101,9 +101,8 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Chats func(childComplexity int) int
-		ID    func(childComplexity int) int
-		Name  func(childComplexity int) int
+		ID   func(childComplexity int) int
+		Name func(childComplexity int) int
 	}
 }
 
@@ -119,7 +118,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Users(ctx context.Context) ([]*model.User, error)
-	Chats(ctx context.Context) ([]*model.Chat, error)
+	Chats(ctx context.Context, user *string) ([]*model.Chat, error)
 	MessagesFromUser(ctx context.Context, input model.MessagesFromUserInput, first *int, after *string) (*model.MessageConnection, error)
 }
 type SubscriptionResolver interface {
@@ -163,12 +162,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Chat.User2(childComplexity), true
 
-	case "Message.chat":
-		if e.complexity.Message.Chat == nil {
+	case "Message.chatID":
+		if e.complexity.Message.ChatID == nil {
 			break
 		}
 
-		return e.complexity.Message.Chat(childComplexity), true
+		return e.complexity.Message.ChatID(childComplexity), true
 
 	case "Message.id":
 		if e.complexity.Message.ID == nil {
@@ -326,7 +325,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.Chats(childComplexity), true
+		args, err := ec.field_Query_chats_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Chats(childComplexity, args["user"].(*string)), true
 
 	case "Query.messagesFromUser":
 		if e.complexity.Query.MessagesFromUser == nil {
@@ -370,13 +374,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Subscription.UserJoined(childComplexity, args["user"].(string)), true
-
-	case "User.chats":
-		if e.complexity.User.Chats == nil {
-			break
-		}
-
-		return e.complexity.User.Chats(childComplexity), true
 
 	case "User.id":
 		if e.complexity.User.ID == nil {
@@ -627,6 +624,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_chats_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["user"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user"))
+		arg0, err = ec.unmarshalOID2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["user"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_messagesFromUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -815,8 +827,6 @@ func (ec *executionContext) fieldContext_Chat_user_1(ctx context.Context, field 
 				return ec.fieldContext_User_id(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
-			case "chats":
-				return ec.fieldContext_User_chats(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -867,8 +877,6 @@ func (ec *executionContext) fieldContext_Chat_user_2(ctx context.Context, field 
 				return ec.fieldContext_User_id(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
-			case "chats":
-				return ec.fieldContext_User_chats(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1007,8 +1015,6 @@ func (ec *executionContext) fieldContext_Message_sender(ctx context.Context, fie
 				return ec.fieldContext_User_id(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
-			case "chats":
-				return ec.fieldContext_User_chats(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1059,8 +1065,6 @@ func (ec *executionContext) fieldContext_Message_receiver(ctx context.Context, f
 				return ec.fieldContext_User_id(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
-			case "chats":
-				return ec.fieldContext_User_chats(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1068,8 +1072,8 @@ func (ec *executionContext) fieldContext_Message_receiver(ctx context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _Message_chat(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Message_chat(ctx, field)
+func (ec *executionContext) _Message_chatID(ctx context.Context, field graphql.CollectedField, obj *model.Message) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Message_chatID(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1082,7 +1086,7 @@ func (ec *executionContext) _Message_chat(ctx context.Context, field graphql.Col
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Chat, nil
+		return obj.ChatID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1094,27 +1098,19 @@ func (ec *executionContext) _Message_chat(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Chat)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNChat2ᚖgraphql_chatᚋpackageᚋmodelᚐChat(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Message_chat(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Message_chatID(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Message",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Chat_id(ctx, field)
-			case "user_1":
-				return ec.fieldContext_Chat_user_1(ctx, field)
-			case "user_2":
-				return ec.fieldContext_Chat_user_2(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Chat", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1345,8 +1341,8 @@ func (ec *executionContext) fieldContext_MessageEdge_node(ctx context.Context, f
 				return ec.fieldContext_Message_sender(ctx, field)
 			case "receiver":
 				return ec.fieldContext_Message_receiver(ctx, field)
-			case "chat":
-				return ec.fieldContext_Message_chat(ctx, field)
+			case "chatID":
+				return ec.fieldContext_Message_chatID(ctx, field)
 			case "time":
 				return ec.fieldContext_Message_time(ctx, field)
 			}
@@ -1443,8 +1439,6 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_id(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
-			case "chats":
-				return ec.fieldContext_User_chats(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1510,8 +1504,8 @@ func (ec *executionContext) fieldContext_Mutation_postMessage(ctx context.Contex
 				return ec.fieldContext_Message_sender(ctx, field)
 			case "receiver":
 				return ec.fieldContext_Message_receiver(ctx, field)
-			case "chat":
-				return ec.fieldContext_Message_chat(ctx, field)
+			case "chatID":
+				return ec.fieldContext_Message_chatID(ctx, field)
 			case "time":
 				return ec.fieldContext_Message_time(ctx, field)
 			}
@@ -1871,8 +1865,6 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_id(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
-			case "chats":
-				return ec.fieldContext_User_chats(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1894,7 +1886,7 @@ func (ec *executionContext) _Query_chats(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Chats(rctx)
+		return ec.resolvers.Query().Chats(rctx, fc.Args["user"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1925,6 +1917,17 @@ func (ec *executionContext) fieldContext_Query_chats(ctx context.Context, field 
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Chat", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_chats_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -2182,8 +2185,8 @@ func (ec *executionContext) fieldContext_Subscription_messagePosted(ctx context.
 				return ec.fieldContext_Message_sender(ctx, field)
 			case "receiver":
 				return ec.fieldContext_Message_receiver(ctx, field)
-			case "chat":
-				return ec.fieldContext_Message_chat(ctx, field)
+			case "chatID":
+				return ec.fieldContext_Message_chatID(ctx, field)
 			case "time":
 				return ec.fieldContext_Message_time(ctx, field)
 			}
@@ -2261,8 +2264,6 @@ func (ec *executionContext) fieldContext_Subscription_userJoined(ctx context.Con
 				return ec.fieldContext_User_id(ctx, field)
 			case "name":
 				return ec.fieldContext_User_name(ctx, field)
-			case "chats":
-				return ec.fieldContext_User_chats(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -2364,55 +2365,6 @@ func (ec *executionContext) fieldContext_User_name(ctx context.Context, field gr
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _User_chats(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_User_chats(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Chats, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Chat)
-	fc.Result = res
-	return ec.marshalOChat2ᚕᚖgraphql_chatᚋpackageᚋmodelᚐChatᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_User_chats(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "User",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Chat_id(ctx, field)
-			case "user_1":
-				return ec.fieldContext_Chat_user_1(ctx, field)
-			case "user_2":
-				return ec.fieldContext_Chat_user_2(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Chat", field.Name)
 		},
 	}
 	return fc, nil
@@ -4449,8 +4401,8 @@ func (ec *executionContext) _Message(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "chat":
-			out.Values[i] = ec._Message_chat(ctx, field, obj)
+		case "chatID":
+			out.Values[i] = ec._Message_chatID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4867,8 +4819,6 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "chats":
-			out.Values[i] = ec._User_chats(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

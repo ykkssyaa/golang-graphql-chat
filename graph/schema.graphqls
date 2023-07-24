@@ -4,7 +4,6 @@ scalar Time
 type User {
   id: ID!
   name: String!
-  chats: [Chat!]
 }
 
 type Message {
@@ -12,7 +11,7 @@ type Message {
   payload: String!
   sender: User!
   receiver: User!
-  chat: Chat!
+  chatID: ID!
   time: Time
 }
 
@@ -46,7 +45,7 @@ type PageInfo {
 
 type Query {
   users: [User!]
-  chats: [Chat!]
+  chats(user: ID): [Chat!]
   messagesFromUser(input:MessagesFromUserInput!, first: Int, after:ID):MessageConnection!
 }
 

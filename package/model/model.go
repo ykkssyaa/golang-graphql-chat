@@ -26,19 +26,30 @@ type MessageDB struct {
 	Receiver   UserDB `gorm:"References:ID"`
 }
 
+func (m *MessageDB) ToGraphQL() *Message {
+	return &Message{
+		ID:       strconv.FormatUint(uint64(m.ID), 10),
+		Payload:  m.Payload,
+		ChatID:   strconv.FormatUint(uint64(m.ChatID), 10),
+		Receiver: m.Receiver.ToGraphQL(),
+		Sender:   m.Sender.ToGraphQL(),
+		Time:     &m.Model.CreatedAt,
+	}
+}
+
 type ChatDB struct {
 	gorm.Model
 	Messages []MessageDB `gorm:"foreignKey:ChatID"`
 	User1    UserDB
 	User2    UserDB
-	User1ID  uint `gorm:"index:idx_users_in_chat,unique"`
-	User2ID  uint `gorm:"index:idx_users_in_chat,unique"`
+	User1ID  uint `gorm:"index:,unique,composite:idx_users_in_chat"`
+	User2ID  uint `gorm:"index:,unique,composite:idx_users_in_chat"`
 }
 
 func (c *ChatDB) ToGraphQL() *Chat {
 	return &Chat{
-		ID: strconv.FormatUint(uint64(c.ID), 10),
-		/*		User1: c.User1.ToGraphQL(),
-				User2: c.User2.ToGraphQL(),*/
+		ID:    strconv.FormatUint(uint64(c.ID), 10),
+		User1: c.User1.ToGraphQL(),
+		User2: c.User2.ToGraphQL(),
 	}
 }

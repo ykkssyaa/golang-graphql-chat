@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"graphql_chat/package/common"
 	"graphql_chat/package/model"
@@ -14,12 +15,19 @@ func (r *mutationResolver) DeleteChat(ctx context.Context, id string) (*bool, er
 }
 
 // Chats is the resolver for the chats field.
-func (r *queryResolver) Chats(ctx context.Context) ([]*model.Chat, error) {
+func (r *queryResolver) Chats(ctx context.Context, user *string) ([]*model.Chat, error) {
 	customContext := common.GetContext(ctx)
 
 	var chats []model.ChatDB
+	var err error
 
-	err := customContext.Database.Find(&chats).Error
+	if user == nil {
+		err = customContext.Database.Find(&chats).Error
+	} else {
+		userID, _ := strconv.ParseUint(*user, 10, 64)
+		err = customContext.Database.Where("user1_id = ? OR user2_id = ?",
+			userID, userID).Find(&chats).Error
+	}
 
 	if err != nil {
 		return nil, err
@@ -36,6 +44,12 @@ func (r *queryResolver) Chats(ctx context.Context) ([]*model.Chat, error) {
 
 // CreateChat is the resolver for the createChat field.
 func (r *mutationResolver) CreateChat(ctx context.Context, input model.NewChat) (*model.Chat, error) {
+
+	// TODO: Запрет создания чатов с одними и теми же пользователями
+
+	if input.User1 == input.User2 {
+		return nil, errors.New("chat with yourself")
+	}
 
 	customContext := common.GetContext(ctx)
 
@@ -56,8 +70,6 @@ func (r *mutationResolver) CreateChat(ctx context.Context, input model.NewChat) 
 	}
 
 	newChat := &model.ChatDB{
-		/*		User1:   model.UserDB{Model: user1.Model},
-				User2:   model.UserDB{Model: user2.Model},*/
 		User1ID: uint(id1),
 		User2ID: uint(id2),
 	}
