@@ -62,9 +62,15 @@ input NewMessage{
   time: Time
 }
 
+input NewChat{
+  user1: ID!
+  user2: ID!
+}
+
 type Mutation {
-  createUser(input:NewUser): User!
-  postMessage(input:NewMessage): Message!
+  createUser(input:NewUser!): User!
+  postMessage(input:NewMessage!): Message!
+  createChat(input:NewChat!): Chat!
 
   deleteChat(id:ID!):Boolean
   deleteMessage(id:ID!):Boolean

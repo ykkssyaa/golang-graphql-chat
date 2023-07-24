@@ -12,8 +12,8 @@ func (r *messageConnectionResolver) Edges(ctx context.Context, obj *model.Messag
 }
 
 // PostMessage is the resolver for the postMessage field.
-func (r *mutationResolver) PostMessage(ctx context.Context, input *model.NewMessage) (*model.Message, error) {
-	panic(fmt.Errorf("not implemented: PostMessage - postMessage"))
+func (r *mutationResolver) PostMessage(ctx context.Context, input model.NewMessage) (*model.Message, error) {
+	panic(fmt.Errorf("not implemented: PostMessage"))
 }
 
 // DeleteMessage is the resolver for the deleteMessage field.

@@ -19,8 +19,13 @@ func InitPostgres() (*gorm.DB, error) {
 	}
 
 	err = db.AutoMigrate(model.UserDB{},
-		model.MessageDB{},
 		model.ChatDB{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.AutoMigrate(model.MessageDB{})
 
 	if err != nil {
 		return nil, err
