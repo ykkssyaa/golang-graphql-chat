@@ -3,7 +3,6 @@ package graph
 import (
 	"context"
 	"errors"
-	"fmt"
 	"graphql_chat/package/common"
 	"graphql_chat/package/model"
 	"strconv"
@@ -11,8 +10,28 @@ import (
 
 // DeleteChat is the resolver for the deleteChat field.
 func (r *mutationResolver) DeleteChat(ctx context.Context, id string) (*bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteChat - deleteChat"))
-	// TODO: Добавить удаление чата
+
+	chatID, _ := strconv.ParseUint(id, 10, 64)
+	ok := true
+
+	commonContext := common.GetContext(ctx)
+
+	err := commonContext.Database.Delete(&model.ChatDB{}, chatID).Error
+
+	if err != nil {
+		ok = false
+		return &ok, err
+	}
+
+	err = commonContext.Database.Where("chat_id = ?", chatID).Delete(&model.MessageDB{}).Error
+
+	if err != nil {
+		ok = false
+		return &ok, err
+	}
+
+	return &ok, err
+
 }
 
 // Chats is the resolver for the chats field.

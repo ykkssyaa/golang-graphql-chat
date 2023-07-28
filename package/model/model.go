@@ -19,6 +19,7 @@ func (u *UserDB) ToGraphQL() *User {
 type MessageDB struct {
 	gorm.Model
 	Payload    string `gorm:"not null;type:text"`
+	Chat       ChatDB
 	ChatID     uint
 	SenderID   uint
 	Sender     UserDB `gorm:"References:ID"`

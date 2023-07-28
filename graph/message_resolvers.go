@@ -63,12 +63,10 @@ func (r *mutationResolver) PostMessage(ctx context.Context, input model.NewMessa
 
 // DeleteMessage is the resolver for the deleteMessage field.
 func (r *mutationResolver) DeleteMessage(ctx context.Context, id string) (*bool, error) {
-	// TODO: Добавить удаление сообщения
 
 	mesID, _ := strconv.ParseUint(id, 10, 64)
-	message := &model.MessageDB{}
 
-	err := common.GetContext(ctx).Database.Delete(message, mesID).Error
+	err := common.GetContext(ctx).Database.Delete(&model.MessageDB{}, mesID).Error
 
 	ok := true
 	if err != nil {
