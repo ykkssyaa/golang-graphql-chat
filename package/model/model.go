@@ -8,7 +8,7 @@ import (
 type UserDB struct {
 	gorm.Model
 	Name  string   `gorm:"not null;size:256"`
-	chats []ChatDB `gorm:"many2many:users_chats;foreignKey:User1ID,User2ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	chats []ChatDB `gorm:"many2many:users_chats;foreignKey:User1ID,User2ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
 func (u *UserDB) ToGraphQL() *User {
@@ -39,7 +39,7 @@ func (m *MessageDB) ToGraphQL() *Message {
 
 type ChatDB struct {
 	gorm.Model
-	Messages []MessageDB `gorm:"foreignKey:ChatID"`
+	Messages []MessageDB `gorm:"foreignKey:ChatID; constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	User1    UserDB
 	User2    UserDB
 	User1ID  uint `gorm:"index:,unique,composite:idx_users_in_chat"`

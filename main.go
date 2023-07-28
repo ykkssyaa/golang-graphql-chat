@@ -1,12 +1,17 @@
 package main
 
 import (
+	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/gorilla/websocket"
 	"graphql_chat/graph"
 	"graphql_chat/package/common"
+	"graphql_chat/package/model"
 	"log"
 	"net/http"
 	"os"
+	"sync"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -27,9 +32,23 @@ func main() {
 
 	customCtx := &common.CustomContext{Database: db}
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
+		MessageChanals: map[string]chan *model.Message{},
+		Mutex:          &sync.Mutex{},
+	}}))
 
-	srv.AddTransport(&transport.Websocket{})
+	srv.AddTransport(transport.SSE{})
+	srv.AddTransport(transport.POST{})
+	srv.AddTransport(transport.Websocket{
+		KeepAlivePingInterval: 10 * time.Second,
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
+			},
+		},
+	})
+
+	srv.Use(extension.Introspection{})
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	http.Handle("/query", common.CreateContext(customCtx, srv))

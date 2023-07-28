@@ -57,7 +57,6 @@ input NewMessage{
   payload: String!
   sender: ID!
   receiver: ID!
-  chat: ID!
   time: Time
 }
 
@@ -66,17 +65,22 @@ input NewChat{
   user2: ID!
 }
 
+type ChatMutationResult{
+  id: ID!
+  user_1: ID!
+  user_2: ID!
+}
+
 type Mutation {
   createUser(input:NewUser!): User!
   postMessage(input:NewMessage!): Message!
-  createChat(input:NewChat!): Chat!
+  createChat(input:NewChat!): ChatMutationResult!
 
   deleteChat(id:ID!):Boolean
   deleteMessage(id:ID!):Boolean
 }
 
 type Subscription {
-  messagePosted(message: ID!):Message!
-  userJoined(user: ID!):User!
+  userJoined(user: ID!):Message!
 }
 

@@ -12,6 +12,12 @@ type Chat struct {
 	User2 *User  `json:"user_2"`
 }
 
+type ChatMutationResult struct {
+	ID    string `json:"id"`
+	User1 string `json:"user_1"`
+	User2 string `json:"user_2"`
+}
+
 type Message struct {
 	ID       string     `json:"id"`
 	Payload  string     `json:"payload"`
@@ -40,7 +46,6 @@ type NewMessage struct {
 	Payload  string     `json:"payload"`
 	Sender   string     `json:"sender"`
 	Receiver string     `json:"receiver"`
-	Chat     string     `json:"chat"`
 	Time     *time.Time `json:"time,omitempty"`
 }
 

@@ -3,7 +3,6 @@ package graph
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"graphql_chat/package/common"
 	"graphql_chat/package/model"
 	"strconv"
@@ -15,40 +14,72 @@ func (r *mutationResolver) PostMessage(ctx context.Context, input model.NewMessa
 
 	customContext := common.GetContext(ctx)
 
-	chatID, _ := strconv.ParseUint(input.Chat, 10, 64)
 	senderID, _ := strconv.ParseUint(input.Sender, 10, 64)
 	receiverID, _ := strconv.ParseUint(input.Receiver, 10, 64)
 
+	var chat model.ChatDB
+
+	err := customContext.Database.Where("user1_id = ? AND user2_id = ? OR user2_id = ? AND user1_id = ?",
+		senderID, receiverID, senderID, receiverID).First(&chat).Error
+
+	if err != nil {
+		panic("chat doesn't exist")
+		// TODO: создать чат
+	}
+
+	// TODO: если время не nil, то добавить в сообщение
+
 	newMessage := model.MessageDB{
 		Payload:    input.Payload,
-		ChatID:     uint(chatID),
+		ChatID:     chat.ID,
 		SenderID:   uint(senderID),
 		ReceiverID: uint(receiverID),
 	}
 
-	err := customContext.Database.Create(&newMessage).Error
+	if input.Time != nil {
+		newMessage.Model.CreatedAt = *input.Time
+	}
+
+	// Сохранение в базу данных
+	err = customContext.Database.Create(&newMessage).Error
 
 	if err != nil {
 		return nil, err
 	}
+
+	customContext.Database.Preload("Sender").Preload("Receiver").First(&newMessage)
+
+	// Если пользователь подключен к серверу, то передаем ему в канал сообщение
+	go func() {
+		if userCanal, ok := r.MessageChanals[input.Receiver]; ok {
+			r.Mutex.Lock()
+			userCanal <- newMessage.ToGraphQL()
+			r.Mutex.Unlock()
+		}
+	}()
 
 	return newMessage.ToGraphQL(), nil
 }
 
 // DeleteMessage is the resolver for the deleteMessage field.
 func (r *mutationResolver) DeleteMessage(ctx context.Context, id string) (*bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteMessage - deleteMessage"))
-}
+	// TODO: Добавить удаление сообщения
 
-// MessagePosted is the resolver for the messagePosted field.
-func (r *subscriptionResolver) MessagePosted(ctx context.Context, message string) (<-chan *model.Message, error) {
-	panic(fmt.Errorf("not implemented: MessagePosted - messagePosted"))
+	mesID, _ := strconv.ParseUint(id, 10, 64)
+	message := &model.MessageDB{}
+
+	err := common.GetContext(ctx).Database.Delete(message, mesID).Error
+
+	ok := true
+	if err != nil {
+		ok = false
+	}
+
+	return &ok, err
 }
 
 // MessagesFromUser is the resolver for the messagesFromUser field.
 func (r *queryResolver) MessagesFromUser(ctx context.Context, input model.MessagesFromUserInput, first *int, after *string) (*model.MessageConnection, error) {
-
-	// TODO: вложенность ответа
 
 	customContext := common.GetContext(ctx)
 
@@ -75,7 +106,8 @@ func (r *queryResolver) MessagesFromUser(ctx context.Context, input model.Messag
 
 	var messagesFromUser []model.MessageDB
 
-	err := customContext.Database.Where("sender_id = ? AND receiver_id = ?", senderID, receiverID).Find(&messagesFromUser).Error
+	err := customContext.Database.Preload("Receiver").Preload("Sender").
+		Where("sender_id = ? AND receiver_id = ?", senderID, receiverID).Find(&messagesFromUser).Error
 
 	if err != nil {
 		return nil, err
