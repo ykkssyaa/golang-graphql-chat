@@ -3,9 +3,12 @@ package graph
 import (
 	"context"
 	"errors"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"graphql_chat/package/common"
 	"graphql_chat/package/model"
 	"strconv"
+	"time"
 )
 
 // DeleteChat is the resolver for the deleteChat field.
@@ -13,22 +16,54 @@ func (r *mutationResolver) DeleteChat(ctx context.Context, id string) (*bool, er
 
 	chatID, _ := strconv.ParseUint(id, 10, 64)
 	ok := true
+	var chat model.ChatDB
 
 	commonContext := common.GetContext(ctx)
 
-	err := commonContext.Database.Delete(&model.ChatDB{}, chatID).Error
+	err := commonContext.Database.Transaction(func(tx *gorm.DB) error {
+		err := commonContext.Database.Preload("User1").Preload("User2").
+			Clauses(clause.Returning{}).Delete(&chat, chatID).Error
+
+		if err != nil {
+			return err
+		}
+
+		err = commonContext.Database.Where("chat_id = ?", chatID).Delete(&model.MessageDB{}).Error
+
+		return err
+	})
 
 	if err != nil {
 		ok = false
 		return &ok, err
 	}
 
-	err = commonContext.Database.Where("chat_id = ?", chatID).Delete(&model.MessageDB{}).Error
+	// Отправляем пользователям сигнал о том, что был удален чат
+	go func() {
 
-	if err != nil {
-		ok = false
-		return &ok, err
-	}
+		// TODO: исправить отправку сообщения о том, что был удален чат
+
+		mes := &model.Message{
+			ChatID: id,
+		}
+
+		mes.Time = &time.Time{}
+
+		user1ID := strconv.FormatUint(uint64(chat.User1ID), 10)
+		user2ID := strconv.FormatUint(uint64(chat.User2ID), 10)
+
+		if userCanal, ok := r.MessageChanals[user1ID]; ok {
+			r.Mutex.Lock()
+			userCanal <- mes
+			r.Mutex.Unlock()
+		}
+
+		if userCanal, ok := r.MessageChanals[user2ID]; ok {
+			r.Mutex.Lock()
+			userCanal <- mes
+			r.Mutex.Unlock()
+		}
+	}()
 
 	return &ok, err
 
@@ -103,7 +138,21 @@ func (r *mutationResolver) CreateChat(ctx context.Context, input model.NewChat) 
 	err = customContext.Database.Omit("User1", "User2").Create(newChat).Error
 
 	if err != nil {
-		return nil, err
+
+		// TODO: Поймать ошибку SQL 23505
+		if errors.Is(err, gorm.ErrForeignKeyViolated) {
+
+			if err = customContext.Database.Model(&model.ChatDB{}).
+				Where("user1_id = ? AND user2_id = ? OR user2_id = ? AND user1_id = ?",
+					input.User1, input.User2, input.User2, input.User1).
+				Update("deleted_at", nil).Error; err != nil {
+
+				return nil, err
+			}
+
+		} else {
+			return nil, err
+		}
 	}
 
 	err = customContext.Database.Preload("User1").Preload("User2").First(&newChat, newChat.ID).Error

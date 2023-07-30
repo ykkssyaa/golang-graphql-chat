@@ -3,10 +3,12 @@ package graph
 import (
 	"context"
 	"encoding/base64"
+	"gorm.io/gorm/clause"
 	"graphql_chat/package/common"
 	"graphql_chat/package/model"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // PostMessage is the resolver for the postMessage field.
@@ -26,8 +28,6 @@ func (r *mutationResolver) PostMessage(ctx context.Context, input model.NewMessa
 		panic("chat doesn't exist")
 		// TODO: создать чат
 	}
-
-	// TODO: если время не nil, то добавить в сообщение
 
 	newMessage := model.MessageDB{
 		Payload:    input.Payload,
@@ -65,13 +65,29 @@ func (r *mutationResolver) PostMessage(ctx context.Context, input model.NewMessa
 func (r *mutationResolver) DeleteMessage(ctx context.Context, id string) (*bool, error) {
 
 	mesID, _ := strconv.ParseUint(id, 10, 64)
+	var message model.MessageDB
 
-	err := common.GetContext(ctx).Database.Delete(&model.MessageDB{}, mesID).Error
+	err := common.GetContext(ctx).Database.Preload("Receiver").Preload("Sender").
+		Clauses(clause.Returning{}).Delete(&message, mesID).Error
 
 	ok := true
 	if err != nil {
 		ok = false
 	}
+
+	// Если пользователь подключен к серверу, то передаем ему в канал удаленное сообщение
+	go func() {
+
+		mes := message.ToGraphQL()
+
+		mes.Time = &time.Time{}
+
+		if userCanal, ok := r.MessageChanals[strconv.FormatUint(uint64(message.ReceiverID), 10)]; ok {
+			r.Mutex.Lock()
+			userCanal <- mes
+			r.Mutex.Unlock()
+		}
+	}()
 
 	return &ok, err
 }
