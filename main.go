@@ -4,6 +4,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/gorilla/websocket"
+	"github.com/subosito/gotenv"
 	"graphql_chat/graph"
 	"graphql_chat/package/common"
 	"graphql_chat/package/model"
@@ -20,11 +21,15 @@ import (
 const defaultPort = "8080"
 
 func main() {
+
+	if err := gotenv.Load(); err != nil {
+		log.Fatalf("error with init env variables: %s", err.Error())
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
 	}
-
 	db, err := common.InitPostgres()
 	if err != nil {
 		log.Fatalf("error with postrges: %v \n", err)
