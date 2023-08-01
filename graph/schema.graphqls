@@ -57,7 +57,6 @@ input NewMessage{
   payload: String!
   sender: ID!
   receiver: ID!
-  time: Time
 }
 
 input NewChat{

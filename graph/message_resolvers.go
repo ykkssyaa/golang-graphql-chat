@@ -50,10 +50,6 @@ func (r *mutationResolver) PostMessage(ctx context.Context, input model.NewMessa
 		ReceiverID: uint(receiverID),
 	}
 
-	if input.Time != nil {
-		newMessage.Model.CreatedAt = *input.Time
-	}
-
 	// Сохранение в базу данных
 	err = customContext.Database.Create(&newMessage).Error
 

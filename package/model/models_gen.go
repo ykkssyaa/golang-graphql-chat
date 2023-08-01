@@ -43,10 +43,9 @@ type NewChat struct {
 }
 
 type NewMessage struct {
-	Payload  string     `json:"payload"`
-	Sender   string     `json:"sender"`
-	Receiver string     `json:"receiver"`
-	Time     *time.Time `json:"time,omitempty"`
+	Payload  string `json:"payload"`
+	Sender   string `json:"sender"`
+	Receiver string `json:"receiver"`
 }
 
 type NewUser struct {
