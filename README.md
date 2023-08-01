@@ -19,7 +19,7 @@
 ## Запуск
 
 1. `go mod download`
-2. `docker run --name=chat -e POSTGRES_PASSWORD="password" -p 5432:5432 -d --rm postgres`
+2. `docker compose up -d`
 3. `go run main.go`
 
 ## Query запросы
