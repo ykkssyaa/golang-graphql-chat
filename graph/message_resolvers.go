@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"gorm.io/gorm/clause"
 	"graphql_chat/package/common"
 	"graphql_chat/package/model"
@@ -25,8 +26,21 @@ func (r *mutationResolver) PostMessage(ctx context.Context, input model.NewMessa
 		senderID, receiverID, senderID, receiverID).First(&chat).Error
 
 	if err != nil {
-		panic("chat doesn't exist")
-		// TODO: создать чат
+
+		if err.Error() == "record not found" {
+
+			createChatRes, err := r.CreateChat(ctx, model.NewChat{User1: input.Sender, User2: input.Receiver})
+
+			if err != nil {
+				return nil, err
+			}
+
+			chatId, _ := strconv.ParseUint(createChatRes.ID, 10, 64)
+			chat.ID = uint(chatId)
+
+		} else {
+			return nil, err
+		}
 	}
 
 	newMessage := model.MessageDB{
@@ -73,6 +87,12 @@ func (r *mutationResolver) DeleteMessage(ctx context.Context, id string) (*bool,
 	ok := true
 	if err != nil {
 		ok = false
+		return &ok, err
+	}
+
+	if message.ID == 0 {
+		ok = false
+		return &ok, errors.New("message not exist")
 	}
 
 	// Если пользователь подключен к серверу, то передаем ему в канал удаленное сообщение

@@ -28,7 +28,7 @@ func (r *mutationResolver) DeleteChat(ctx context.Context, id string) (*bool, er
 			return err
 		}
 
-		err = commonContext.Database.Where("chat_id = ?", chatID).Delete(&model.MessageDB{}).Error
+		err = commonContext.Database.Unscoped().Where("chat_id = ?", chatID).Delete(&model.MessageDB{}).Error
 
 		return err
 	})
@@ -36,6 +36,11 @@ func (r *mutationResolver) DeleteChat(ctx context.Context, id string) (*bool, er
 	if err != nil {
 		ok = false
 		return &ok, err
+	}
+
+	if chat.ID == 0 {
+		ok = false
+		return &ok, errors.New("chat not exist")
 	}
 
 	// Отправляем пользователям сигнал о том, что был удален чат
@@ -133,19 +138,23 @@ func (r *mutationResolver) CreateChat(ctx context.Context, input model.NewChat) 
 	newChat := &model.ChatDB{
 		User1ID: uint(id1),
 		User2ID: uint(id2),
+		User1:   model.UserDB{Model: gorm.Model{ID: uint(id1)}},
+		User2:   model.UserDB{Model: gorm.Model{ID: uint(id2)}},
 	}
 
-	err = customContext.Database.Omit("User1", "User2").Create(newChat).Error
+	err = customContext.Database.Create(newChat).Error
 
 	if err != nil {
 
-		// TODO: Поймать ошибку SQL 23505
-		if errors.Is(err, gorm.ErrForeignKeyViolated) {
+		if err.Error() == "duplicated key not allowed" {
 
-			if err = customContext.Database.Model(&model.ChatDB{}).
-				Where("user1_id = ? AND user2_id = ? OR user2_id = ? AND user1_id = ?",
-					input.User1, input.User2, input.User2, input.User1).
-				Update("deleted_at", nil).Error; err != nil {
+			customContext.Database.Where("user1_id = ? AND user2_id = ?",
+				uint(id1), uint(id2)).Find(&model.ChatDB{})
+
+			if err = customContext.Database.Model(&model.ChatDB{}).Unscoped().
+				Where("user1_id = ? AND user2_id = ?",
+					uint(id1), uint(id2)).
+				Update("deleted_at", gorm.Expr("NULL")).Error; err != nil {
 
 				return nil, err
 			}
@@ -155,11 +164,12 @@ func (r *mutationResolver) CreateChat(ctx context.Context, input model.NewChat) 
 		}
 	}
 
-	err = customContext.Database.Preload("User1").Preload("User2").First(&newChat, newChat.ID).Error
+	err = customContext.Database.Where("user1_id = ? AND user2_id = ?",
+		uint(id1), uint(id2)).First(&newChat).Error
 
 	return &model.ChatMutationResult{
 		ID:    strconv.FormatUint(uint64(newChat.ID), 10),
-		User1: strconv.FormatUint(uint64(newChat.User1ID), 10),
-		User2: strconv.FormatUint(uint64(newChat.User2ID), 10),
+		User1: strconv.FormatUint(id1, 10),
+		User2: strconv.FormatUint(id2, 10),
 	}, err
 }
