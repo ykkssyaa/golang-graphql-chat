@@ -17,6 +17,7 @@ def main():
     # Входим в меню авторизации
     while True:
         inpt = menus.auth_menu()
+        print("\n\n")
         match inpt:
             case "1":
                 thr = auth.CreateUser(clientChat)
@@ -25,19 +26,21 @@ def main():
 
             case "0":
                 exit(0)
+        print("\n\n")
 
         if clientChat.currentID == "0":
             print("Error with auth, try again!\n\n\n")
         else:
             break
 
-    sleep(1)
+    sleep(0.5)
     print(f"{ clientChat.getName()}, Добро пожаловать! Ваш ID - {clientChat.currentID}")
 
     # Входим в меню для взаимодействия с чатом
     while True:
         inpt = menus.main_menu()
 
+        print("\n\n")
         match inpt:
             case "1":
                 allChats(clientChat)
@@ -51,6 +54,7 @@ def main():
                 allUsers(clientChat)
             case "0":
                 exit(0)
+        print("\n\n")
 
 
 if __name__ == '__main__':

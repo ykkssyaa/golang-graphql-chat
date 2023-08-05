@@ -6,7 +6,11 @@ from gql.transport.websockets import WebsocketsTransport
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport import exceptions as transportexp
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.CRITICAL)
+
+
+def print_message(payload, senderName, mesId, time):
+    print(f"{senderName:<8}: {payload:<15}   ({time[11:19]}) |ID:{mesId}")
 
 
 class ClientChat:
@@ -19,9 +23,12 @@ class ClientChat:
         self.client = Client(transport=transport, fetch_schema_from_transport=True, )
 
         self._authComplete = False
-        self.currentID = 0
-        self.currentChatID = 0
+        self.currentID = "0"
+        self.currentChatID = "0"
         self._currentName = ""
+        self.currentInterlocutor = "0"
+
+        self.chats = []
 
     def auth(self, userID: str):
         subscription = gql("""
@@ -71,13 +78,48 @@ class ClientChat:
             raise Exception("Error with subscription")
 
     def _message_processing(self, message):
-        print(message)
+        logging.log(level=logging.INFO, msg=message)
+
+        if message['chatID'] == self.currentChatID:
+            print_message(payload=message['payload'],
+                          senderName=message['sender']['name'],
+                          mesId=message['id'],
+                          time=message['time']
+                          )
 
     def setCurrentChat(self, currentChatID: str):
         if not self._checkChat(currentChatID):
             raise Exception("no permissions to set this chat as current")
 
         self.currentChatID = currentChatID
+        self.currentInterlocutor = self.getInterlocutor()
+
+    def exitChat(self):
+        self.currentChatID = "0"
+        self.currentInterlocutor = "0"
+
+    def getInterlocutor(self):
+        if self.currentChatID == "0" or not self._authComplete:
+            return "0"
+
+        if self.currentInterlocutor != "0":
+            return self.currentInterlocutor
+
+        for chat in self.chats:
+            if chat["id"] == self.currentChatID:
+                if chat['user_1']['id'] != self.currentID:
+                    return chat['user_1']['id']
+                else:
+                    return chat['user_2']['id']
+
+        for chat in self.chats_of_user():
+            if chat["id"] == self.currentChatID:
+                if chat['user_1']['id'] != self.currentID:
+                    return chat['user_1']['id']
+                else:
+                    return chat['user_2']['id']
+
+        return "0"
 
     def createUser(self, name: str):
         mutation = gql("""
@@ -198,5 +240,84 @@ class ClientChat:
 
         return result["deleteChat"]
 
-    def postMessage(self):
-        pass
+    def postMessage(self, payload: str):
+
+        if payload.replace(" ", "") == "":
+            raise Exception("empty message")
+
+        mutation = gql("""
+        mutation ($payload: String!, $sender: ID!, $receiver: ID!) {
+            postMessage(input: {payload: $payload, sender: $sender, receiver: $receiver}) {
+                id
+                payload
+                chatID
+                time
+            }
+        }
+        """)
+
+        args = {"payload": payload, "sender": self.currentID, "receiver": self.getInterlocutor()}
+
+        resultMessage = self.client.execute(mutation, variable_values=args)["postMessage"]
+
+        return resultMessage
+
+    messagesCountOnPage = 15
+
+    def _loadMessages(self, sender, receiver):
+        query = gql("""
+        query ($receiver: ID!, $sender: ID!, $count: Int!, $after: ID) {
+            messagesFromUser(input: 
+            {receiver: $receiver, sender: $sender},
+             first: $count, 
+            after: $after) 
+            {
+                edges {
+                    node {
+                        id
+                        payload
+                        time
+                        sender {
+                            id
+                            name
+                        }
+                        receiver {
+                            id
+                            name
+                        }
+                    }
+                }
+                pageInfo {
+                    startCursor
+                    endCursor
+                    hasNextPage
+                    }
+            }
+        }
+        """)
+
+        args = {"count": self.messagesCountOnPage, "receiver": receiver,
+                "sender": sender, "after": None}
+
+        messages = []
+
+        while True:
+            result = self.client.execute(query, variable_values=args)["messagesFromUser"]
+
+            messages += result["edges"]
+
+            if not result["pageInfo"]["hasNextPage"]:
+                break
+
+            args["after"] = result["pageInfo"]["endCursor"]
+
+        return messages
+
+    def loadMessages(self):
+
+        messages = self._loadMessages(self.currentID, self.getInterlocutor()) + \
+                   self._loadMessages(self.getInterlocutor(), self.currentID)
+
+        messages = list(map(lambda d: d['node'], messages))
+
+        return sorted(messages, key=lambda d: d['id'])

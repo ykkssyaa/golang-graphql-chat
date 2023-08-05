@@ -23,6 +23,7 @@ def chat_menu():
     print("-" * 30)
     print("1. Режим общения (выход - !q)")
     print("2. Удалить сообщение")
-    print("3. ")
     print("0. Выход")
+
+    return input(">>  ")
 
