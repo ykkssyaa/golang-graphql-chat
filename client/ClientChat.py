@@ -6,11 +6,11 @@ from gql.transport.websockets import WebsocketsTransport
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport import exceptions as transportexp
 
-logging.basicConfig(level=logging.CRITICAL)
+logging.basicConfig(level=logging.INFO)
 
 
 def print_message(payload, senderName, mesId, time):
-    print(f"{senderName:<8}: {payload:<15}   ({time[11:19]}) |ID:{mesId}")
+    print(f"{senderName:<8}: {payload:<10}   ({time[11:19]}) |ID:{mesId}")
 
 
 class ClientChat:
@@ -59,11 +59,14 @@ class ClientChat:
         session = Client(transport=transport, fetch_schema_from_transport=True)
 
         def message_handler():
-            # TODO: Обработка сообщений, добавление в список чатов
             # TODO: Обработка ошибок внутри потока
             # TODO: При удалении отправляется нулевое сообщение, из-за чего вылезает ошибка
-            for message in session.subscribe(subscription, variable_values=args):
-                self._message_processing(message["userJoined"])
+            while threading.current_thread().is_alive():
+                try:
+                    for message in session.subscribe(subscription, variable_values=args):
+                        self._message_processing(message["userJoined"])
+                except:
+                    pass
 
         try:
             thr = threading.Thread(target=message_handler)

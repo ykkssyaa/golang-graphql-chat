@@ -18,14 +18,22 @@ def main():
     while True:
         inpt = menus.auth_menu()
         print("\n\n")
-        match inpt:
-            case "1":
-                thr = auth.CreateUser(clientChat)
-            case "2":
-                thr = auth.SignIn(clientChat)
+        try:
+            match inpt:
+                case "1":
+                    thr = auth.CreateUser(clientChat)
 
-            case "0":
-                exit(0)
+                    if thr is None:
+                        continue
+
+                case "2":
+                    thr = auth.SignIn(clientChat)
+
+                case "0":
+                    exit(0)
+        except Exception as e:
+            print("Проблема в авторизации " + str(e))
+
         print("\n\n")
 
         if clientChat.currentID == "0":
@@ -59,6 +67,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-    exit(0)
 
