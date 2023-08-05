@@ -1,19 +1,15 @@
-import asyncio
 import threading
+import logging
 
 from gql import Client, gql
 from gql.transport.websockets import WebsocketsTransport
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport import exceptions as transportexp
-import logging
 
 logging.basicConfig(level=logging.INFO)
 
-tasks = set()
 
 class ClientChat:
-
-    allMessages = []
 
     def __init__(self, URL):
 
@@ -24,9 +20,10 @@ class ClientChat:
 
         self._authComplete = False
         self.currentID = 0
+        self.currentChatID = 0
         self._currentName = ""
 
-    async def auth(self, userID: str):
+    def auth(self, userID: str):
         subscription = gql("""
         subscription ($UserID:ID!){
             userJoined(user: $UserID){
@@ -48,25 +45,41 @@ class ClientChat:
 
         args = {"UserID": userID}
 
+        self.currentID = userID
+        self._authComplete = True
         transport = WebsocketsTransport(url="ws://" + self.url)
 
-        # TODO: Обработка сообщений, добавление в список чатов
-        async with Client(transport=transport, fetch_schema_from_transport=True) as session:
-            try:
+        session = Client(transport=transport, fetch_schema_from_transport=True)
 
-                self._authComplete = True
-                self.currentID = userID
+        def message_handler():
+            # TODO: Обработка сообщений, добавление в список чатов
+            # TODO: Обработка ошибок внутри потока
+            # TODO: При удалении отправляется нулевое сообщение, из-за чего вылезает ошибка
+            for message in session.subscribe(subscription, variable_values=args):
+                self._message_processing(message["userJoined"])
 
-                async for message in session.subscribe(subscription, variable_values=args):
-                    await self._message_processing(message)
+        try:
+            thr = threading.Thread(target=message_handler)
+            thr.daemon = True
+            thr.start()
 
-            except transportexp.TransportQueryError as exp:
-                self._authComplete = False
-                self.currentID = 0
+            return thr
 
-                raise Exception("Error with subscription" + exp.data)
+        except transportexp.TransportQueryError as exp:
+            self._authComplete = False
+            self.currentID = 0
+            raise Exception("Error with subscription")
 
-    async def createUser(self, name: str):
+    def _message_processing(self, message):
+        print(message)
+
+    def setCurrentChat(self, currentChatID: str):
+        if not self._checkChat(currentChatID):
+            raise Exception("no permissions to set this chat as current")
+
+        self.currentChatID = currentChatID
+
+    def createUser(self, name: str):
         mutation = gql("""
             mutation CreateUser ($name: String!) {
                 createUser(input: {name: $name}) {
@@ -78,11 +91,11 @@ class ClientChat:
 
         args = {"name": name}
 
-        result = await self.client.execute_async(mutation, variable_values=args)
+        result = self.client.execute(mutation, variable_values=args)
 
         return result["createUser"]
 
-    async def allUsers(self):
+    def allUsers(self):
 
         query = gql("""
             query Users {
@@ -93,24 +106,97 @@ class ClientChat:
             }
         """)
 
-        result = await self.client.execute_async(query)
-
+        result = self.client.execute(query)
         return result["users"]
 
-    async def getName(self) -> str:
+    def getName(self, userID="") -> str:
 
-        if self.currentID == 0 or not self._authComplete:
+        if len(userID) == 0:
+            userID = self.currentID
+
+        if (self.currentID == "0" or not self._authComplete) and userID == self.currentID:
             return ""
-        if self._currentName != "":
+        if self._currentName != "" and userID == self.currentID:
             return self._currentName
 
-        for user in await self.allUsers():
-            if user["id"] == self.currentID:
-                self._currentName = user["name"]
-                return self._currentName
+        for user in self.allUsers():
+            if user["id"] == userID:
+
+                if userID == self.currentID:
+                    self._currentName = user["name"]
+
+                return user["name"]
 
         return "User not found"
 
-    async def _message_processing(self, message):
-        print(message)
+    def chats_of_user(self):
 
+        query = gql("""
+        query ($user: ID) {
+            chats (user: $user) {
+                id
+                user_1 {
+                    id
+                    name
+                } 
+                user_2 {
+                    id
+                    name
+                }
+            }
+        }
+        """)
+
+        args = {"user": self.currentID}
+
+        result = self.client.execute(query, variable_values=args)["chats"]
+        self.chats = result
+
+        return result
+
+    def createChat(self, otherUserID: str):
+        mutation = gql("""
+        
+        mutation ($user1:ID!, $user2:ID!) {
+            createChat(input: {user1: $user1, user2: $user2}) {
+                id
+                user_1
+                user_2
+            }
+        }
+        """)
+
+        args = {"user1": self.currentID, "user2": otherUserID}
+
+        result = self.client.execute(mutation, variable_values=args)
+        return result["createChat"]
+
+    def _checkChat(self, chatID: str) -> bool:
+
+        chats = self.chats_of_user()
+
+        for chat in chats:
+            if chat["id"] == chatID:
+                return True
+
+        return False
+
+    def deleteChat(self, chatID: str):
+
+        if not self._checkChat(chatID):
+            raise Exception("no permissions to delete this chat")
+
+        mutation = gql("""
+        mutation ($chat:ID!) {
+            deleteChat(id: $chat)
+        }
+        """)
+
+        args = {"chat": chatID}
+
+        result = self.client.execute(mutation, variable_values=args)
+
+        return result["deleteChat"]
+
+    def postMessage(self):
+        pass

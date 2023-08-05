@@ -1,66 +1,57 @@
-import asyncio
-import time
-
-from gql import Client, gql
-from gql.transport.websockets import WebsocketsTransport
-import logging
-
-#session = None
-logging.basicConfig(level=logging.INFO)
+from ClientChat import ClientChat
 
 
-async def auth():
-    subscription = gql("""
-        subscription ($UserID:ID!){
-            userJoined(user: $UserID){
-                id
-                chatID      
-                payload          
-                receiver{
-                    id
-                    name
-                }
-                sender{
-                    id
-                    name
-                }
-                time            
-            }
-        }
-        """)
+def allUsers(client: ClientChat):
+    users = client.allUsers()
+    userID = client.currentID
 
-    logging.log(level=logging.INFO, msg="in auth function")
-
-    args = {"UserID": "1"}
-    transport = WebsocketsTransport(url="ws://" + "localhost:8080/query")
-
-    async with Client(transport=transport, fetch_schema_from_transport=True) as session:
-        logging.log(level=logging.INFO, msg="in session")
-        async for message in session.subscribe(subscription, variable_values=args):
-            logging.log(level=logging.INFO, msg="in in async for loop")
-            print(message)
-        logging.log(level=logging.INFO, msg="after async for loop")
-
-    logging.log(level=logging.INFO, msg="after session")
+    for user in users:
+        print(f"ID:{user['id']}| {user['name'] + ('(Вы)' if user['id'] == userID else '')}")
 
 
-async def main():
-    print("Before auth")
+def allChats(client: ClientChat):
+    userID = client.currentID
+    chats = client.chats_of_user()
 
-    coro = auth()
+    for chat in chats:
+        otherUser = {}
+        if chat["user_1"]["id"] != userID:
+            otherUser = chat["user_1"]
+        else:
+            otherUser = chat["user_2"]
 
-    task = asyncio.create_task(auth())
-    await asyncio.sleep(0)
-
-    print("After auth")
-
-    await asyncio.sleep(1)
-
-    while True:
-        await asyncio.sleep(1)
-        inp = input(">>>")
+        print(f"ID: {chat['id']} - User {otherUser['name']} | ID:{otherUser['id']}")
 
 
+def deleteChat(client: ClientChat):
 
-if __name__ == '__main__':
-    asyncio.run(main())
+    chatID = input("ID чата: ")
+
+    res = client.deleteChat(chatID=chatID)
+
+    print(res)
+
+
+def openChatWithID(client: ClientChat, chatID: str):
+
+    try:
+        client.setCurrentChat(chatID)
+    except Exception:
+        print("Нет доступа к этому чату или его не существует")
+
+
+def createChat(client: ClientChat):
+    otherUserID = input("ID пользователя: ")
+
+    res = client.createChat(otherUserID)
+
+    print(f"Создан чат с пользователем {client.getName(otherUserID)} (ID:{otherUserID}),"
+          f" chatID: {res['id']}")
+
+    openChatWithID(client, res['id'])
+
+
+def openChat(client: ClientChat):
+    chatID = input("ID чата: ")
+
+    openChatWithID(client, chatID)

@@ -2,6 +2,7 @@ from ClientChat import ClientChat
 import menus, auth
 import asyncio
 from time import sleep
+from chatFunctionality import *
 
 PORT = "8080"
 URL = f"localhost:{PORT}/query"
@@ -9,7 +10,7 @@ URL = f"localhost:{PORT}/query"
 loop = asyncio.get_event_loop()
 
 
-async def main():
+def main():
 
     clientChat = ClientChat(URL)
 
@@ -18,46 +19,42 @@ async def main():
         inpt = menus.auth_menu()
         match inpt:
             case "1":
-                # TODO: Настроить создание пользователя
-                auth.CreateUser(clientChat)
+                thr = auth.CreateUser(clientChat)
             case "2":
-                singInId = input("Введите ID пользователя: ")
-                task = asyncio.create_task(clientChat.auth(singInId))
-                await asyncio.sleep(0)
+                thr = auth.SignIn(clientChat)
 
             case "0":
                 exit(0)
 
-        await asyncio.sleep(1)
         if clientChat.currentID == "0":
             print("Error with auth, try again!\n\n\n")
         else:
             break
 
-    await asyncio.sleep(0)
-    print(f"{await clientChat.getName()}, Добро пожаловать! Ваш ID - {clientChat.currentID}")
+    sleep(1)
+    print(f"{ clientChat.getName()}, Добро пожаловать! Ваш ID - {clientChat.currentID}")
 
     # Входим в меню для взаимодействия с чатом
     while True:
-        await asyncio.sleep(0)
         inpt = menus.main_menu()
 
         match inpt:
             case "1":
-                pass
+                allChats(clientChat)
             case "2":
-                pass
+                openChat(clientChat)
             case "3":
-                pass
+                createChat(clientChat)
             case "4":
-                pass
+                deleteChat(clientChat)
+            case "5":
+                allUsers(clientChat)
             case "0":
-                # TODO: при выходе вызывается ошибка, что task не закрыто
                 exit(0)
 
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()
 
     exit(0)
 
