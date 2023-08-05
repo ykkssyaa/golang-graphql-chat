@@ -59,8 +59,6 @@ class ClientChat:
         session = Client(transport=transport, fetch_schema_from_transport=True)
 
         def message_handler():
-            # TODO: Обработка ошибок внутри потока
-            # TODO: При удалении отправляется нулевое сообщение, из-за чего вылезает ошибка
             while threading.current_thread().is_alive():
                 try:
                     for message in session.subscribe(subscription, variable_values=args):
